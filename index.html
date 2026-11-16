@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Major Film Festivals Interactive Explorer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.2);
+            --border: #334155;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 8px 0;
+            color: var(--text-primary);
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: #334155;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #475569;
+        }
+
+        button.active {
+            background-color: var(--accent);
+            color: #0f172a;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .card-details {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .card-details h3 {
+            margin: 0 0 6px 0;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .card-details p {
+            margin: 4px 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .card-details strong {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Global Film Festival Circuit Explorer</h1>
+        <p class="subtitle">Compare the Big Five festivals across public accessibility and industry market power.</p>
+    </header>
+
+    <div class="controls">
+        <button id="btn-influence" class="active" onclick="switchMetric('influence')">Industry Market Influence</button>
+        <button id="btn-access" onclick="switchMetric('access')">Public Accessibility Score</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="festivalChart"></canvas>
+    </div>
+
+    <div class="card-details" id="detailsBox">
+        <h3>Select a festival above or click a bar</h3>
+        <p>Explore how each major international gathering balances artistic prestige, commercial deals, and audience participation.</p>
+    </div>
+</div>
+
+<script>
+    const festivalData = {
+        Cannes: {
+            focus: "International Auteur & High-Stakes Market",
+            access: 30,
+            influence: 98,
+            milestones: "Pulp Fiction (1994), Parasite (2019), Taxi Driver (1976)"
+        },
+        Venice: {
+            focus: "Prestige & Autumn Awards Launchpad",
+            access: 65,
+            influence: 90,
+            milestones: "Roma (2018), Joker (2019), Black Swan (2010)"
+        },
+        Berlinale: {
+            focus: "Political, Socially Conscious & Independent",
+            access: 90,
+            influence: 85,
+            milestones: "Spirited Away (2002), Before Sunrise (1995), There Will Be Blood (2007)"
+        },
+        Sundance: {
+            focus: "American Indie Discovery & Breakthrough Talent",
+            access: 75,
+            influence: 92,
+            milestones: "Whiplash (2014), Reservoir Dogs (1992), CODA (2021)"
+        },
+        TIFF: {
+            focus: "Audience Curation & Early Oscar Barometer",
+            access: 95,
+            influence: 88,
+            milestones: "La La Land (2016), Slumdog Millionaire (2008), American Beauty (1999)"
+        }
+    };
+
+    const ctx = document.getElementById('festivalChart').getContext('2d');
+    
+    let currentMetric = 'influence';
+
+    const labels = Object.keys(festivalData);
+    const getDatasetData = (metric) => labels.map(key => festivalData[key][metric]);
+
+    const chartConfig = {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Score (out of 100)',
+                data: getDatasetData(currentMetric),
+                backgroundColor: 'rgba(56, 189, 248, 0.7)',
+                borderColor: '#38bdf8',
+                borderWidth: 1,
+                borderRadius: 8,
+                hoverBackgroundColor: '#38bdf8'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: '#334155' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#f8fafc', font: { weight: 'bold' } }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ` Score: ${context.raw} / 100`;
+                        }
+                    }
+                }
+            },
+            onClick: (e, elements) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const festivalName = labels[index];
+                    updateDetails(festivalName);
+                }
+            }
+        }
+    };
+
+    const festivalChart = new Chart(ctx, chartConfig);
+
+    function switchMetric(metric) {
+        currentMetric = metric;
+        
+        document.getElementById('btn-influence').classList.toggle('active', metric === 'influence');
+        document.getElementById('btn-access').classList.toggle('active', metric === 'access');
+
+        festivalChart.data.datasets[0].data = getDatasetData(metric);
+        festivalChart.update();
+
+        // Update details box title/context based on active button
+        const titleText = metric === 'influence' ? 'Industry Market Influence' : 'Public Accessibility Score';
+        document.getElementById('detailsBox').innerHTML = `
+            <h3>${titleText} View Active</h3>
+            <p>Click on any bar in the chart to inspect programming focus, public access levels, and historical breakthroughs for that specific festival.</p>
+        `;
+    }
+
+    function updateDetails(festivalName) {
+        const data = festivalData[festivalName];
+        document.getElementById('detailsBox').innerHTML = `
+            <h3>${festivalName}</h3>
+            <p><strong>Primary Focus:</strong> ${data.focus}</p>
+            <p><strong>Industry Influence:</strong> ${data.influence}/100 | <strong>Public Access:</strong> ${data.access}/100</p>
+            <p><strong>Famous Milestones:</strong> ${data.milestones}</p>
+        `;
+    }
+</script>
+
+</body>
+</html>
